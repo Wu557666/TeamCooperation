@@ -2,36 +2,159 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我们的网页</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D工业模型展示 - 修复黑暗版</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Microsoft YaHei', sans-serif; }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        /* 卡片样式（与之前一致，简洁） */
         .card {
-            position: absolute; top: 50%; left: 50%;
+            position: fixed;
+            top: 50%;
+            left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            padding: 30px 40px;
-            border-radius: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            background: rgba(25, 28, 35, 0.95);
+            backdrop-filter: blur(16px);
+            border-radius: 32px;
+            padding: 28px 24px 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            z-index: 300;
+            color: #f0f3f8;
+            border: 1px solid rgba(255,255,255,0.2);
             text-align: center;
+        }
+        .card h2 { margin-top: 0; margin-bottom: 20px; font-size: 1.8rem; background: linear-gradient(135deg, #fff, #aad0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .welcome-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+        .welcome-buttons button, .back-btn {
+            background: rgba(58, 110, 165, 0.9);
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+        .welcome-buttons button:hover, .back-btn:hover { background: #ffaa00; color: #1e1e1e; transform: scale(1.02); }
+        .back-btn { background: rgba(0,0,0,0.6); margin-top: 12px; padding: 8px 20px; }
+        #model-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(30,30,40,0.85);
+            backdrop-filter: blur(12px);
+            padding: 12px 20px;
+            border-radius: 60px;
+            z-index: 150;
+            display: flex;
+            gap: 12px;
+            border: 1px solid #555;
+        }
+        .model-btn {
+            background: #3a6ea5;
+            border: none;
+            color: white;
+            padding: 8px 22px;
+            border-radius: 40px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .model-btn.active { background: #ffaa00; color: #1e1e1e; }
+        #slider-container {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            background: rgba(30,30,40,0.85);
+            backdrop-filter: blur(12px);
+            padding: 12px 24px;
+            border-radius: 48px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            z-index: 150;
+            color: white;
+        }
+        #scale-slider { width: 220px; accent-color: #ffaa00; }
+        #scale-value { font-weight: bold; color: #ffaa00; min-width: 50px; background: #00000066; padding: 4px 8px; border-radius: 30px; }
+        .hint {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 14px;
+            border-radius: 40px;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .hidden { display: none !important; }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: #0ff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            z-index: 300;
+            font-size: 14px;
+            font-family: monospace;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #fefefe;
+            padding: 20px;
+            border-radius: 15px;
+            width: 380px;
+            max-width: 85vw;
+            position: relative;
+        }
+        .close { position: absolute; top: 10px; right: 15px; font-size: 28px; cursor: pointer; }
+        .modal-title { color: #2c3e50; margin-top: 0; }
+        #back-from-global {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #ffaa55;
+            color: white;
+            padding: 6px 18px;
+            border-radius: 40px;
+            cursor: pointer;
             z-index: 200;
-            min-width: 300px;
-            border: 1px solid rgba(255,255,255,0.5);
-            color: #333;
         }
-        .card h2 { margin-top: 0; color: #2c3e50; }
-        .card button {
-            background: #3498db; border: none; color: white;
-            padding: 12px 30px; margin: 10px; border-radius: 40px;
-            font-size: 18px; cursor: pointer; transition: background 0.2s;
-            border: 1px solid rgba(255,255,255,0.3); font-weight: bold;
+        .download-links {
+            position: fixed;
+            bottom: 18px;
+            left: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 6px 15px;
+            border-radius: 40px;
+            font-size: 11px;
+            display: flex;
+            gap: 12px;
+            z-index: 180;
         }
-        .card button:hover { background: #2980b9; }
-        .card .back-btn { background: #95a5a6; margin-top: 20px; }
-        .card .back-btn:hover { background: #7f8c8d; }
-        .welcome-buttons { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-        .text-content { max-width: 500px; text-align: left; margin: 20px 0; line-height: 1.8; font-size: 16px; color: #2c3e50; }
+        .download-links a { color: #ccc; text-decoration: none; }
 
         /* 模型切换面板 */
         #model-panel {
@@ -110,22 +233,24 @@
     <div id="welcome-card" class="card">
         <h2>✨ 欢迎使用模型展示</h2>
         <div class="welcome-buttons">
-            <button id="btn-model">📦 模型</button>
-            <button id="btn-reason">❓ 原因</button>
+            <button id="btn-model">📦 3D模型</button>
+            <button id="btn-reason">❓ 设计溯源</button>
             <button id="btn-team">👥 团队成员</button>
         </div>
+       <p style="font-size:0.8rem; margin-top:20px;">点击探索我们的项目</p>
     </div>
 
     <!-- 原因卡片（可自定义内容） -->
     <div id="reason-card" class="card hidden">
         <h2>❓ 原因说明</h2>
         <div class="text-content">
-            <p><strong>设计原因</strong></p>
-            <ul>
-                <li>1</li><li>2</li><li>3</li><li>4</li><li>5</li><li>6</li>
+
+                <li>清洁能源可视化，助力碳中和科普</li>
+                <li>融合风力、水力、海洋平台三大场景</li>
+                <li>3</li>
+
             </ul>
-            <p><strong>项目背景</strong></p>
-            <ul><li>ipconfig</li></ul>
+
         </div>
         <button class="back-btn" id="back-from-reason">← 返回主页</button>
     </div>
@@ -156,10 +281,10 @@
         <button class="model-btn" data-model="water.glb">水利发电(单个)</button>
         <!-- 你可以根据需要增加更多按钮，并创建对应的GLB文件 -->
     </div>
-    <div style="position: fixed; top: 10px; left:15px; font-family: sans-serif; z-index: 9999;">
-    <a href="wind.glb" style="color: #888; font-size: 12px; text-decoration: none; margin-right: 8px;">风力模型下载</a >
-    <a href="platform.glb" style="color: #888; font-size: 12px; text-decoration: none; margin-right: 8px;">平台模型下载</a >
-    <a href="water.glb" style="color: #888; font-size: 12px; text-decoration: none; margin-right: 8px;">波浪模型下载</a >
+   <div class="download-links">
+        <a href="wind.glb" download>📥 风力模型下载</a>
+        <a href="platform.glb" download>📥 平台模型下载</a>
+        <a href="water.glb" download>📥 波浪模型下载</a>
     </div>
     <button class="back-btn" id="back-from-global">← 返回主页</button>
     <!-- 缩放滑块 -->
@@ -224,11 +349,22 @@
         backLight.position.set(-5, 0, 5);
         scene.add(backLight);
 
-        // 辅助网格和坐标轴（调试时可保留，正式可注释）
-        // const gridHelper = new THREE.GridHelper(20, 20, 0x888888, 0x444444);
-        // scene.add(gridHelper);
-        // const axesHelper = new THREE.AxesHelper(5);
-        // scene.add(axesHelper);
+        const gridHelper = new THREE.GridHelper(30, 20, 0x88aaff, 0x335588);
+        gridHelper.position.y = -2.2;
+        gridHelper.material.transparent = true;
+        gridHelper.material.opacity = 0.35;
+        scene.add(gridHelper);
+
+        // 简单的地面反射平面 (透明)
+        const groundPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(25, 25),
+            new THREE.MeshStandardMaterial({ color: 0x112233, roughness: 0.7, metalness: 0.1, transparent: true, opacity: 0.2 })
+        );
+        groundPlane.rotation.x = -Math.PI / 2;
+        groundPlane.position.y = -2.4;
+        groundPlane.receiveShadow = true;
+        scene.add(groundPlane);
+
 
         // --- 模型管理 ---
         const loader = new GLTFLoader();
@@ -406,6 +542,57 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+
     </script>
+<<script>
+(function() {
+    // 等待页面完全加载
+    window.addEventListener('load', function() {
+        // 获取所有带有 data-model 属性的按钮
+        var btns = document.querySelectorAll('[data-model]');
+        for (var i = 0; i < btns.length; i++) {
+            var btn = btns[i];
+            // 保存原有的点击事件（如果有）
+            var oldClick = btn.onclick;
+            // 添加新的点击事件（不会覆盖原有的）
+            btn.addEventListener('click', function(e) {
+                var path = this.getAttribute('data-model');
+                // 弹窗内容
+                var title = '', text = '';
+                if (path === 'wind.glb') {
+                    title = '风力发电';
+                    text = '三叶片设计，将风能转化为电能。';
+                } else if (path === 'platform.glb') {
+                    title = '海洋平台';
+                    text = '主要结构负载';
+                } else if (path === 'water.glb') {
+                    title = '水力发电';
+                    text = '利用波浪起伏发电';
+                }
+                if (title) {
+                    // 创建或显示弹窗
+                    showSimpleModal(title, text);
+                }
+            });
+        }
+    });
+
+    // 弹窗函数（自动创建，不会冲突）
+    function showSimpleModal(title, text) {
+        var modal = document.getElementById('safeModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'safeModal';
+            modal.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100000; justify-content:center; align-items:center;';
+            modal.innerHTML = '<div style="background:white; padding:20px; border-radius:10px; width:300px; text-align:center;"><h3 id="safeModalTitle"></h3><p id="safeModalText"></p><button onclick="document.getElementById(\'safeModal\').style.display=\'none\'">关闭</button></div>';
+            document.body.appendChild(modal);
+        }
+        document.getElementById('safeModalTitle').innerText = title;
+        document.getElementById('safeModalText').innerText = text;
+        modal.style.display = 'flex';
+    }
+})();
+</script>
 </body>
 </html>
